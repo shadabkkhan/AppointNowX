@@ -24,10 +24,9 @@ from app.db.base import Base, TimestampMixin
 
 
 class UserRole(str, Enum):
-    USER = "user"
+    OWNER = "owner"
     ADMIN = "admin"
     DOCTOR = "doctor"
-    OWNER = "owner"
 
 class User(TimestampMixin, Base):
     __tablename__ = "users"
