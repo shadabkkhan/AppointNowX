@@ -27,7 +27,7 @@ class UserRole(str, Enum):
     USER = "user"
     ADMIN = "admin"
     DOCTOR = "doctor"
-
+    OWNER = "owner"
 
 class User(TimestampMixin, Base):
     __tablename__ = "users"
