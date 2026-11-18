@@ -43,7 +43,7 @@ def test_both_hash_password_verify():
     assert verify_password(pass1, hash_pass1) is True
     assert verify_password(pass2, hash_pass2) is True
 
-def verify_emoji_or_acsent_password():
+def test_verify_emoji_or_accent_password():
     password = "Dental🦷123"
 
     hashed_password = hash_password(password)
@@ -82,3 +82,10 @@ def test_hash_password_rejects_empty_pass():
 
     with pytest.raises(ValueError):
         hash_password(password)
+
+
+def test_verify_password_rejects_invalid_hash():
+    password = "Dental@123"
+    invalid_hash = "not-a-valid-bcrypt-hash"
+
+    assert verify_password(password, invalid_hash) is False
