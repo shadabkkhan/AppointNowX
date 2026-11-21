@@ -21,3 +21,6 @@ AppointNowX_Technical_Documentation.docx
 *.tmp
 .DS_Store
 Thumbs.db
+
+PROJECT_STATE.md
+AppointNowX_RULES.md
