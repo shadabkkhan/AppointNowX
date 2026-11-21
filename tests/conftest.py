@@ -7,6 +7,11 @@ import pytest
 from dotenv import dotenv_values
 from sqlalchemy.engine import make_url
 
+from collections.abc import AsyncIterator
+
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.pool import NullPool
+
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 ENV_FILE = PROJECT_ROOT / ".env"
@@ -80,3 +85,43 @@ def migrated_database() -> None:
                 f"STDERR:\n{result.stderr}"
             )
 
+@pytest.fixture
+def anyio_backend() -> str:
+    return "asyncio"
+
+
+@pytest.fixture
+async def db_session(
+    migrated_database: None,
+) -> AsyncIterator[AsyncSession]:
+    from app.core.config import settings
+
+    if not settings.database_url:
+        raise RuntimeError("Db URL is not configured.")
+
+    engine = create_async_engine(
+        settings.database_url,
+        poolclass=NullPool,
+    )
+
+    try:
+        async with engine.connect() as connection:
+            outer_transaction = await connection.begin()
+
+            session = AsyncSession(
+                bind=connection,
+                expire_on_commit=False,
+                join_transaction_mode="create_savepoint",
+            )
+
+            try:
+                yield session
+            finally:
+                try:
+                    await session.close()
+                finally:
+                    if outer_transaction.is_active:
+                        await outer_transaction.rollback()
+
+    finally:
+        await engine.dispose()
