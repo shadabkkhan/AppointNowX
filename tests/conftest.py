@@ -12,6 +12,7 @@ from collections.abc import AsyncIterator
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.pool import NullPool
 
+from httpx import ASGITransport, AsyncClient
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 ENV_FILE = PROJECT_ROOT / ".env"
@@ -126,3 +127,26 @@ async def db_session(
 
     finally:
         await engine.dispose()
+
+
+@pytest.fixture
+async def client(
+    db_session: AsyncSession,
+    anyio_backend: str,
+) -> AsyncIterator[AsyncClient]:
+    from app.db.session import get_db
+    from app.main import app
+
+    async def override_get_db() -> AsyncIterator[AsyncSession]:
+        yield db_session
+
+    app.dependency_overrides[get_db] = override_get_db
+
+    try:
+        async with AsyncClient(
+            transport=ASGITransport(app=app),
+            base_url="http://test",
+        ) as test_client:
+            yield test_client
+    finally:
+        app.dependency_overrides.clear()
