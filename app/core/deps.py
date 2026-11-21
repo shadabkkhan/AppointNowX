@@ -11,6 +11,7 @@ from app.models.user import User
 bearer_scheme = HTTPBearer(auto_error=False)
 
 
+
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials | None = Depends(
         bearer_scheme
@@ -39,17 +40,17 @@ async def get_current_user(
         raise unauthorized_exception
 
 
+    if (
+            user.role != token_payload.role
+            or user.organization_id != token_payload.organization_id
+        ):
+            raise unauthorized_exception
+
+
     if not user.is_active:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Account is disabled",
         )
-
-
-    if (
-        user.role != token_payload.role
-        or user.organization_id != token_payload.organization_id
-    ):
-        raise unauthorized_exception
 
     return user
