@@ -93,6 +93,7 @@ def anyio_backend() -> str:
 @pytest.fixture
 async def db_session(
     migrated_database: None,
+    anyio_backend: str,
 ) -> AsyncIterator[AsyncSession]:
     from app.core.config import settings
 
