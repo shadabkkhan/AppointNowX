@@ -3,14 +3,14 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from collections.abc import Awaitable, Callable
+
 from app.core.tokens import TokenError, decode_access_token
 from app.db.session import get_db
-from app.models.user import User
+from app.models.user import User, UserRole
 
 
 bearer_scheme = HTTPBearer(auto_error=False)
-
-
 
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials | None = Depends(
@@ -54,3 +54,31 @@ async def get_current_user(
         )
 
     return user
+
+
+def require_roles(
+        *allowed_roles: UserRole
+    ) -> Callable[...,Awaitable[User]]:
+    if not allowed_roles:
+        raise ValueError("No roles are there, atleast one role must be provided")
+
+    for role in allowed_roles:
+        if not isinstance(role, UserRole):
+            raise ValueError(f"Invalid Role: {role}")
+        
+
+    async def role_checker(
+        current_user: User = Depends(get_current_user),
+    ) -> User:
+    
+        if current_user.role not in allowed_roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You do not have permission to perform this action",
+            )
+    
+        return current_user
+
+    return role_checker
+    
+        
