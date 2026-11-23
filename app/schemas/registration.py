@@ -12,6 +12,7 @@ from pydantic import (
 )
 
 from app.models.organization import OrganizationType
+from app.models.user import UserRole
 
 
 class OrganizationRegistrationRequest(BaseModel):
@@ -83,3 +84,27 @@ class OrganizationRegistrationRequest(BaseModel):
             raise ValueError("Invalid phone number.")
 
         return normalized
+
+
+class RegisteredOrganizationResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    name: str
+    type: OrganizationType
+    timezone: str
+
+
+class RegisteredOwnerResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    email: EmailStr
+    phone: str | None
+    role: UserRole
+
+
+class RegistrationResponse(BaseModel):
+    organization: RegisteredOrganizationResponse
+    owner: RegisteredOwnerResponse
+    
