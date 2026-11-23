@@ -13,7 +13,6 @@ from tests.factories import (
     make_organization,
     make_user,
 )
-from sqlalchemy.ext.asyncio import AsyncSession
 
 pytestmark = pytest.mark.anyio
 
